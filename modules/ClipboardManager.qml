@@ -48,17 +48,27 @@ OverlayWindow {
     function copyItem(entry) {
         if (!entry) return
         if (entry.isImage) {
-            // Remove 'file://' prefix to get raw path
             const rawPath = entry.imagePath.replace("file://", "")
-            copyProcess.command = ["sh", "-c", `wl-copy -t image/png < ${rawPath}`]
+            copyProcess.command = ["sh", "-c", "wl-copy -t image/png < " + rawPath]
+            copyProcess.running = true
+            clipboard.hide()
         } else {
-            // Write text to a temporary file, then copy it to avoid escaping issues
-            const tmpPath = "/tmp/quickshell-clip-tmp.txt"
-            Quickshell.Io.File.write(tmpPath, entry.content)
-            copyProcess.command = ["sh", "-c", `wl-copy < ${tmpPath}`]
+            const safeContent = entry.content.replace(/'/g, "'\\''")
+            copyProcess.command = ["sh", "-c", "printf '%s' '" + safeContent + "' | wl-copy"]
+            copyProcess.running = true
+            clipboard.hide()
         }
-        copyProcess.running = true
+    }
+    
+    function clearClipboard() {
+        clearProcess.running = true
+        clipboard.allItems = []
+        clipboard.applyFilter()
         clipboard.hide()
+    }
+    
+    property Process clearProcess: Process {
+        command: ["sh", "-c", "echo '[]' > \"$HOME/.cache/quickshell-clipboard.json\" && rm -f /tmp/quickshell-clip-*.png"]
     }
 
     // Process to read clipboard json
@@ -72,9 +82,23 @@ OverlayWindow {
                 fullOutput = ""
             } else {
                 try {
+                    if (fullOutput.trim() === "") return
                     const newItems = JSON.parse(fullOutput)
-                    clipboard.allItems = newItems
-                    clipboard.applyFilter()
+                    
+                    let changed = false
+                    if (clipboard.allItems.length !== newItems.length) {
+                        changed = true
+                    } else if (newItems.length > 0 && clipboard.allItems.length > 0) {
+                        // Check if the most recent item changed (in case we are at the 50 item limit)
+                        if (clipboard.allItems[0].id !== newItems[0].id) {
+                            changed = true
+                        }
+                    }
+                    
+                    if (changed) {
+                        clipboard.allItems = newItems
+                        clipboard.applyFilter()
+                    }
                 } catch (e) {
                     console.warn("Could not parse clipboard JSON:", e)
                 }
@@ -90,6 +114,14 @@ OverlayWindow {
 
     property Process copyProcess: Process {
         id: copyProcess
+    }
+    
+    Timer {
+        id: liveUpdateTimer
+        interval: 1000
+        repeat: true
+        running: clipboard.shown && !cliphistListProcess.running
+        onTriggered: refreshClipboard()
     }
 
     ColumnLayout {
@@ -122,7 +154,10 @@ OverlayWindow {
 
             TextInput {
                 id: queryField
-                anchors.fill: parent
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: clearBtn.left
                 anchors.margins: 12
                 color: Theme.surfaceText
                 font.pixelSize: 16
@@ -137,15 +172,61 @@ OverlayWindow {
                         clipboard.moveSelection(1)
                         event.accepted = true
                     } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                        clipboard.copyItem(clipboard.results[clipboard.selectedIndex])
+                        if (clipboard.results.length > 0) {
+                            clipboard.copyItem(clipboard.results[clipboard.selectedIndex])
+                        }
                         event.accepted = true
                     } else if (event.key === Qt.Key_Escape) {
                         clipboard.hide()
                         event.accepted = true
+                    } else if ((event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete) && (event.modifiers & Qt.ControlModifier)) {
+                        clipboard.clearClipboard()
+                        event.accepted = true
                     }
                 }
-
                 onTextChanged: clipboard.applyFilter()
+            }
+            
+            // Clear History Button
+            Rectangle {
+                id: clearBtn
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins: 12
+                width: 28; height: 28; radius: 6
+                color: clearMouse.containsMouse ? Theme.error : "transparent"
+                Text {
+                    anchors.centerIn: parent
+                    text: "🗑"
+                    color: clearMouse.containsMouse ? "#ffffff" : Theme.surfaceVariantText
+                    font.pixelSize: 16
+                }
+                MouseArea {
+                    id: clearMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: clipboard.clearClipboard()
+                }
+                
+                // Tooltip
+                Rectangle {
+                    visible: clearMouse.containsMouse
+                    anchors.right: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.rightMargin: 8
+                    width: tooltipText.width + 16
+                    height: tooltipText.height + 8
+                    color: Theme.surface
+                    border.color: Theme.outlineVariant
+                    radius: 4
+                    Text {
+                        id: tooltipText
+                        anchors.centerIn: parent
+                        text: "Clear History (Ctrl+Backspace)"
+                        color: Theme.surfaceText
+                        font.pixelSize: 12
+                    }
+                }
             }
         }
 
@@ -158,6 +239,7 @@ OverlayWindow {
             spacing: 8
             model: clipboard.results
             currentIndex: clipboard.selectedIndex
+            layer.enabled: true
 
             delegate: Rectangle {
                 id: delegateRect
@@ -167,9 +249,9 @@ OverlayWindow {
                 
                 property bool isSelected: index === clipboard.selectedIndex
                 
-                color: isSelected ? Theme.primaryContainer : "transparent"
-                border.width: 1
-                border.color: isSelected ? Theme.primary : Theme.outlineVariant
+                color: isSelected 
+                       ? Qt.rgba(Theme.onPrimaryContainerColor.r, Theme.onPrimaryContainerColor.g, Theme.onPrimaryContainerColor.b, 0.85) 
+                       : "transparent"
 
                 MouseArea {
                     anchors.fill: parent
@@ -188,7 +270,7 @@ OverlayWindow {
                     Text {
                         Layout.fillWidth: true
                         text: modelData.content
-                        color: delegateRect.isSelected ? Theme.onPrimaryContainerColor : Theme.surfaceText
+                        color: delegateRect.isSelected ? Theme.inversePrimary : Theme.onPrimaryContainerColor
                         font.pixelSize: 14
                         wrapMode: Text.Wrap
                         maximumLineCount: 10
