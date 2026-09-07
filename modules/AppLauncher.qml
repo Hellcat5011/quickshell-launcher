@@ -58,15 +58,78 @@ OverlayWindow {
         applyFilter()
     }
 
+    function fuzzyScore(query, text) {
+        if (!text) return -1;
+        query = query.toLowerCase();
+        text = text.toLowerCase();
+        if (query.length === 0) return 0;
+        
+        let qIdx = 0;
+        let tIdx = 0;
+        let score = 0;
+        let lastMatchIdx = -2;
+        
+        while (qIdx < query.length && tIdx < text.length) {
+            if (query[qIdx] === text[tIdx]) {
+                if (lastMatchIdx === tIdx - 1) {
+                    score += 5; // contiguous match
+                } else {
+                    score += 1;
+                }
+                if (tIdx === 0 || text[tIdx - 1] === ' ' || text[tIdx - 1] === '-') {
+                    score += 10; // word boundary
+                }
+                lastMatchIdx = tIdx;
+                qIdx++;
+            }
+            tIdx++;
+        }
+        
+        if (qIdx === query.length) {
+            score -= text.length * 0.1; // penalize longer strings
+            if (text.startsWith(query)) score += 20;
+            return score;
+        }
+        return -1;
+    }
+
     function applyFilter() {
-        const q = queryField.text.toLowerCase().trim()
-        results = q.length === 0
-            ? allApps
-            : allApps.filter(e =>
-                e.name.toLowerCase().includes(q) ||
-                (e.genericName && e.genericName.toLowerCase().includes(q)) ||
-                (e.keywords    && e.keywords.some(k => k.toLowerCase().includes(q))))
-        selectedIndex = 0
+        const q = queryField.text.trim();
+        if (q.length === 0) {
+            results = allApps;
+        } else {
+            const scoredApps = [];
+            for (let i = 0; i < allApps.length; i++) {
+                const app = allApps[i];
+                let maxScore = -1;
+                
+                const nameScore = fuzzyScore(q, app.name);
+                if (nameScore > maxScore) maxScore = nameScore;
+                
+                if (app.genericName) {
+                    const gScore = fuzzyScore(q, app.genericName);
+                    if (gScore !== -1 && (gScore * 0.8) > maxScore) {
+                        maxScore = gScore * 0.8;
+                    }
+                }
+                
+                if (app.keywords) {
+                    for (let k = 0; k < app.keywords.length; k++) {
+                        const kScore = fuzzyScore(q, app.keywords[k]);
+                        if (kScore !== -1 && (kScore * 0.5) > maxScore) {
+                            maxScore = kScore * 0.5;
+                        }
+                    }
+                }
+                
+                if (maxScore !== -1) {
+                    scoredApps.push({ app: app, score: maxScore });
+                }
+            }
+            scoredApps.sort((a, b) => b.score - a.score);
+            results = scoredApps.map(e => e.app);
+        }
+        selectedIndex = 0;
     }
 
     function moveSelection(delta) {
