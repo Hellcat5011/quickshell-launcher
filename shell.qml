@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 // ─────────────────────────────────────────────────────────────────────────
 // shell.qml — Quickshell entry point
 //
@@ -57,6 +58,22 @@ ShellRoot {
 
     Modules.PowerMenu {
         id: powerMenu
+    }
+
+    Modules.DesktopMpris {
+        id: desktopMpris
+    }
+
+    Modules.DesktopTray {
+        id: desktopTray
+    }
+
+    Modules.DesktopClock {
+        id: desktopClock
+    }
+
+    Modules.DesktopCalendar {
+        id: desktopCalendar
     }
 
     // IPC handlers: these let you (or a Hyprland keybind) control the
