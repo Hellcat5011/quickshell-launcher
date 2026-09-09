@@ -54,9 +54,9 @@ PanelWindow {
                 "icon": notif.icon
             });
             
-            if (popupModel.count > 5) popupModel.remove(0, 1);
-            
-            // We don't dynamically create timers here anymore to prevent memory leaks!
+            // Removed forced deletion of index 0 when count > 5.
+            // This prevents sudden transition overlaps. The list will naturally 
+            // auto-dismiss them safely one by one.
         }
     }
     
@@ -64,7 +64,7 @@ PanelWindow {
     
     Timer {
         id: animCooldown
-        interval: 700
+        interval: 800
         onTriggered: root.isListAnimating = false
     }
     
@@ -95,9 +95,9 @@ PanelWindow {
         id: popupList
         x: 10
         width: parent.width - 10
-        height: contentItem.childrenRect.height
+        height: contentHeight
         Behavior on height {
-            enabled: popupList.contentItem.childrenRect.height < popupList.height
+            enabled: popupList.contentHeight < popupList.height
             SequentialAnimation {
                 PauseAnimation { duration: 300 }
                 NumberAnimation { duration: 300; easing.type: Easing.OutCubic }

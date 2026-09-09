@@ -64,6 +64,7 @@ PanelWindow {
             radius: Theme.radiusSmall
             color: Theme.surface
             clip: true
+                radius: 3
 
             // Cover Art OR Fallback Colored Box
             Rectangle {
@@ -72,6 +73,7 @@ PanelWindow {
                 // Use the calendar selection color (Theme.primary) for the fallback box
                 color: root.mprisData.artUrl ? "transparent" : Theme.primary
                 clip: true
+                radius: 3
 
                 function getFallbackSvg() {
                     // We MUST url-encode the SVG, otherwise the '#' in Theme colors
