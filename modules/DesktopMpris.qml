@@ -4,6 +4,7 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import QtQuick.Effects
 import "../services"
 
 PanelWindow {
@@ -59,39 +60,42 @@ PanelWindow {
 
         // Album Art
         Rectangle {
+            id: artContainer
             Layout.preferredWidth: 100
             Layout.preferredHeight: 100
             radius: Theme.radiusSmall
-            color: Theme.surface
+            color: "transparent"
             clip: true
-                radius: 3
 
-            // Cover Art OR Fallback Colored Box
+            function getFallbackSvg() {
+                // We MUST url-encode the SVG, otherwise the '#' in Theme colors
+                // breaks the data URI parser (it treats it as a URL fragment!)
+                let c = Theme.background;
+                let bg = Theme.primary;
+                let raw = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt" d="M 16.50 8.85 L 19.78 6.55 A 9.5 9.5 0 1 1 17.45 4.22" />
+                    <circle cx="12" cy="12" r="4.5" fill="${c}" />
+                    <circle cx="12" cy="12" r="1.5" fill="${bg}" />
+                </svg>`;
+                return "data:image/svg+xml," + encodeURIComponent(raw);
+            }
+
             Rectangle {
-                anchors.fill: parent
-                radius: 3
-                // Use the calendar selection color (Theme.primary) for the fallback box
+                id: backgroundRect
+                width: 90
+                height: 90
+                anchors.centerIn: parent
                 color: root.mprisData.artUrl ? "transparent" : Theme.primary
+                radius: 10
                 clip: true
-                radius: 3
-
-                function getFallbackSvg() {
-                    // We MUST url-encode the SVG, otherwise the '#' in Theme colors
-                    // breaks the data URI parser (it treats it as a URL fragment!)
-                    let c = Theme.background;
-                    let bg = Theme.primary;
-                    let raw = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt" d="M 16.50 8.85 L 19.78 6.55 A 9.5 9.5 0 1 1 17.45 4.22" />
-                        <circle cx="12" cy="12" r="4.5" fill="${c}" />
-                        <circle cx="12" cy="12" r="1.5" fill="${bg}" />
-                    </svg>`;
-                    return "data:image/svg+xml," + encodeURIComponent(raw);
-                }
 
                 Image {
+                    id: artImage
                     anchors.fill: parent
-                    source: root.mprisData.artUrl ? root.mprisData.artUrl : parent.getFallbackSvg()
+                    source: root.mprisData.artUrl || artContainer.getFallbackSvg()
                     fillMode: Image.PreserveAspectCrop
+                    visible: false
+                    layer.enabled: true
                     
                     // Prevent SVG pixelation by setting sourceSize to the exact render dimensions
                     sourceSize.width: parent.width
@@ -99,6 +103,21 @@ PanelWindow {
                     
                     // Small margin so it fills up more of the space
                     anchors.margins: root.mprisData.artUrl ? 0 : 5
+                }
+                
+                Rectangle {
+                    id: maskRect
+                    anchors.fill: parent
+                    radius: 10
+                    visible: false
+                    layer.enabled: true
+                }
+                
+                MultiEffect {
+                    source: artImage
+                    anchors.fill: parent
+                    maskEnabled: true
+                    maskSource: maskRect
                 }
             }
 
