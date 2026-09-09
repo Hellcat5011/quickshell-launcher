@@ -85,6 +85,12 @@ PanelWindow {
         return true;
     }
     
+    function dismissPopupByIndex(idx) {
+        if (idx >= 0 && idx < popupModel.count) {
+            popupModel.remove(idx, 1);
+        }
+    }
+    
     ListView {
         id: popupList
         x: 10
@@ -226,7 +232,7 @@ PanelWindow {
                                     id: closeMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    onClicked: root.dismissPopup(model.id)
+                                    onClicked: root.dismissPopupByIndex(index)
                                 }
                             }
                         }
@@ -268,7 +274,7 @@ PanelWindow {
                 MouseArea {
                     anchors.fill: parent
                     z: -1
-                    onClicked: root.dismissPopup(model.id)
+                    onClicked: root.dismissPopupByIndex(index)
                 }
         }
     }
