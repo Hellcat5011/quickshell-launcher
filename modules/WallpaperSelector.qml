@@ -63,7 +63,9 @@ OverlayWindow {
         command: [
             "bash", "-c",
             "find '" + picker.wallpaperDir + "' -maxdepth 1 -type f " +
-            "\\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\)"
+            "\\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' " +
+            "-o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.svg' -o -iname '*.avif' " +
+            "-o -iname '*.heic' -o -iname '*.heif' -o -iname '*.jxl' -o -iname '*.tiff' \\)"
         ]
         stdout: SplitParser {
             onRead: data => {
