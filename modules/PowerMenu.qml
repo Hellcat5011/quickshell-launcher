@@ -113,7 +113,7 @@ OverlayWindow {
                 event.accepted = true;
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 if (powerMenu.selectedIndex === 0) powerMenu.executeCommand("loginctl lock-session");
-                else if (powerMenu.selectedIndex === 1) powerMenu.executeCommand("hyprctl dispatch exit");
+                else if (powerMenu.selectedIndex === 1) powerMenu.executeCommand("hyprctl dispatch hl.dsp.exit");
                 else if (powerMenu.selectedIndex === 2) powerMenu.executeCommand("systemctl reboot");
                 else if (powerMenu.selectedIndex === 3) powerMenu.executeCommand("systemctl poweroff");
                 event.accepted = true;
@@ -121,7 +121,7 @@ OverlayWindow {
                 powerMenu.executeCommand("loginctl lock-session");
                 event.accepted = true;
             } else if (event.key === Qt.Key_2 || event.key === Qt.Key_E) {
-                powerMenu.executeCommand("hyprctl dispatch exit");
+                powerMenu.executeCommand("hyprctl dispatch 'hl.dsp.exit()'");
                 event.accepted = true;
             } else if (event.key === Qt.Key_3 || event.key === Qt.Key_R) {
                 powerMenu.executeCommand("systemctl reboot");
@@ -147,7 +147,7 @@ OverlayWindow {
             PowerButton {
                 index: 1
                 label: "Logout"
-                command: "hyprctl dispatch exit"
+                command: "hyprctl dispatch 'hl.dsp.exit()'"
                 iconSvg: "<path d='M10 22H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h5'></path><polyline points='16 17 21 12 16 7'></polyline><line x1='21' y1='12' x2='9' y2='12'></line>"
             }
 
