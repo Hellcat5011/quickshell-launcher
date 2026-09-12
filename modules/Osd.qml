@@ -67,6 +67,7 @@ PanelWindow {
         color: Qt.rgba(Theme.inversePrimary.r, Theme.inversePrimary.g, Theme.inversePrimary.b, 0.65)
         border.width: 1
         border.color: Theme.inversePrimary
+        layer.enabled: true
         
         transform: Translate {
             id: cardTranslate

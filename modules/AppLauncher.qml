@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Io
@@ -181,28 +182,16 @@ OverlayWindow {
                     anchors.margins: 12
                     spacing: 8
 
-                    // Magnifier glyph
-                    Canvas {
+                    // Magnifier glyph (GPU-rendered Shape)
+                    Shape {
                         width: 18; height: 18
                         Layout.alignment: Qt.AlignVCenter
-                        onPaint: {
-                            const ctx = getContext("2d")
-                            ctx.clearRect(0, 0, width, height)
-                            ctx.strokeStyle = Theme.surfaceVariantText
-                            ctx.lineWidth   = 2
-                            ctx.beginPath()
-                            ctx.arc(7, 7, 5, 0, Math.PI * 2)
-                            ctx.stroke()
-                            ctx.beginPath()
-                            ctx.moveTo(11, 11)
-                            ctx.lineTo(16, 16)
-                            ctx.stroke()
+                        layer.enabled: true; layer.samples: 4
+                        ShapePath {
+                            strokeWidth: 2; strokeColor: Theme.surfaceVariantText; fillColor: "transparent"
+                            capStyle: ShapePath.RoundCap
+                            PathSvg { path: "M 7 7 m -5 0 a 5 5 0 1 0 10 0 a 5 5 0 1 0 -10 0 M 11 11 L 16 16" }
                         }
-                        Connections {
-                            target: Theme
-                            function onSurfaceVariantTextChanged() { searchIcon.requestPaint() }
-                        }
-                        id: searchIcon
                     }
 
                     TextInput {

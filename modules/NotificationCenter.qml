@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import QtQuick.Shapes
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
 import "../services"
@@ -43,6 +44,16 @@ OverlayWindow {
     }
     
     property bool sinkMenuIsOpen: false
+
+    // Static process objects to avoid Qt.createQmlObject memory leaks
+    Process { id: volumeProcess }
+    Process { id: brightnessProcess }
+    Process { id: sinkSwitchProcess }
+    Timer {
+        id: sinkRefreshTimer
+        interval: 500
+        onTriggered: SystemMonitor.refreshAudio()
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -158,9 +169,8 @@ OverlayWindow {
 
                             onMoved: {
                                 let vol = value / 100.0;
-                                let p = Qt.createQmlObject('import Quickshell.Io 1.0; Process {}', nc);
-                                p.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", vol.toFixed(2)];
-                                p.running = true;
+                                volumeProcess.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", vol.toFixed(2)];
+                                volumeProcess.running = true;
                                 SystemMonitor.currentVolume = value;
                             }
                         }
@@ -268,11 +278,10 @@ OverlayWindow {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     onClicked: {
-                                        let p = Qt.createQmlObject('import Quickshell.Io 1.0; Process {}', nc);
-                                        p.command = ["pactl", "set-default-sink", modelData.name];
-                                        p.running = true;
+                                        sinkSwitchProcess.command = ["pactl", "set-default-sink", modelData.name];
+                                        sinkSwitchProcess.running = true;
                                         nc.sinkMenuIsOpen = false;
-                                        Qt.createQmlObject('import QtQuick; Timer { interval: 500; running: true; onTriggered: SystemMonitor.refreshAudio() }', nc);
+                                        sinkRefreshTimer.restart();
                                     }
                                 }
                             }
@@ -324,9 +333,8 @@ OverlayWindow {
                     }
 
                     onMoved: {
-                        let p = Qt.createQmlObject('import Quickshell.Io 1.0; Process {}', nc);
-                        p.command = ["ddcutil", "-b", "4", "setvcp", "10", Math.round(value).toString()];
-                        p.running = true;
+                        brightnessProcess.command = ["ddcutil", "-b", "4", "setvcp", "10", Math.round(value).toString()];
+                        brightnessProcess.running = true;
                     }
                 }
                 
@@ -505,6 +513,7 @@ OverlayWindow {
                                             color: Qt.rgba(Theme.inversePrimary.r, Theme.inversePrimary.g, Theme.inversePrimary.b, 0.85)
                                             border.width: 1
                                             border.color: Theme.onPrimaryContainerColor
+                                            layer.enabled: true
                                             
                                             ColumnLayout {
                                                 id: notifCol

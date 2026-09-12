@@ -31,11 +31,13 @@ PanelWindow {
     property var mprisData: ({})
     property bool isPlaying: mprisData.status === "Playing"
 
+    // Static process for playerctl commands to avoid Qt.createQmlObject memory leaks
+    Process { id: playerCtlProcess }
+
     function runPlayerCtl(cmd) {
         if (!root.mprisData.player) return;
-        let p = Qt.createQmlObject('import Quickshell.Io; Process {}', root);
-        p.command = ["playerctl", "-p", root.mprisData.player, cmd];
-        p.running = true;
+        playerCtlProcess.command = ["playerctl", "-p", root.mprisData.player, cmd];
+        playerCtlProcess.running = true;
     }
 
     Process {

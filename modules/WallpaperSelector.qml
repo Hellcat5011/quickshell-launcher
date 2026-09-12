@@ -67,10 +67,20 @@ OverlayWindow {
             "-o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.svg' -o -iname '*.avif' " +
             "-o -iname '*.heic' -o -iname '*.heif' -o -iname '*.jxl' -o -iname '*.tiff' \\)"
         ]
+        property var _buffer: []
+
+        onRunningChanged: {
+            if (running) {
+                _buffer = []
+            } else {
+                picker.wallpapers = _buffer
+            }
+        }
+
         stdout: SplitParser {
             onRead: data => {
                 if (data.trim().length > 0)
-                    picker.wallpapers = picker.wallpapers.concat([data.trim()])
+                    scanProcess._buffer.push(data.trim())
             }
         }
     }

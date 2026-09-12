@@ -66,9 +66,10 @@ update
 # This ensures that if a player switches tracks but has a slight delay in updating
 # its DBus interface, the widget will self-correct instantly on the next tick.
 (
-    while true; do echo "tick"; sleep 1; done
-    stdbuf -oL playerctl metadata --follow --format 'trigger' 2>/dev/null
-    stdbuf -oL playerctl status --follow 2>/dev/null
+    while true; do echo "tick"; sleep 1; done &
+    stdbuf -oL playerctl metadata --follow --format 'trigger' 2>/dev/null &
+    stdbuf -oL playerctl status --follow 2>/dev/null &
+    wait
 ) | while read -r _; do
     update
 done

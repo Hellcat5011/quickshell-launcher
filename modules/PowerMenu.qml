@@ -112,10 +112,9 @@ OverlayWindow {
                 else if (powerMenu.selectedIndex === -1) powerMenu.selectedIndex = 0;
                 event.accepted = true;
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                if (powerMenu.selectedIndex === 0) powerMenu.executeCommand("loginctl lock-session");
-                else if (powerMenu.selectedIndex === 1) powerMenu.executeCommand("hyprctl dispatch hl.dsp.exit");
-                else if (powerMenu.selectedIndex === 2) powerMenu.executeCommand("systemctl reboot");
-                else if (powerMenu.selectedIndex === 3) powerMenu.executeCommand("systemctl poweroff");
+                let buttons = [lockBtn, logoutBtn, rebootBtn, shutdownBtn];
+                if (powerMenu.selectedIndex >= 0 && powerMenu.selectedIndex < buttons.length)
+                    powerMenu.executeCommand(buttons[powerMenu.selectedIndex].command);
                 event.accepted = true;
             } else if (event.key === Qt.Key_1 || event.key === Qt.Key_L) {
                 powerMenu.executeCommand("loginctl lock-session");
@@ -138,6 +137,7 @@ OverlayWindow {
             spacing: 40
 
             PowerButton {
+                id: lockBtn
                 index: 0
                 label: "Lock"
                 command: "loginctl lock-session"
@@ -145,6 +145,7 @@ OverlayWindow {
             }
 
             PowerButton {
+                id: logoutBtn
                 index: 1
                 label: "Logout"
                 command: "hyprctl dispatch 'hl.dsp.exit()'"
@@ -152,6 +153,7 @@ OverlayWindow {
             }
 
             PowerButton {
+                id: rebootBtn
                 index: 2
                 label: "Reboot"
                 command: "systemctl reboot"
@@ -159,6 +161,7 @@ OverlayWindow {
             }
 
             PowerButton {
+                id: shutdownBtn
                 index: 3
                 label: "Shutdown"
                 command: "systemctl poweroff"

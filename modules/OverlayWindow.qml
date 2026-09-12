@@ -80,6 +80,7 @@ PanelWindow {
         border.width: root.hasBorder && !root.cardTransparent ? 1 : 0
         border.color: Theme.outlineVariant
         clip: true
+        layer.enabled: true
 
         // Fade + gentle scale animation on open/close.
         opacity: (root.enterAnimation === "scale") ? (root.shown ? 1 : 0) : 1

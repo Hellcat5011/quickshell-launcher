@@ -174,10 +174,6 @@ PanelWindow {
                 
                 // Readability shadow
                 layer.enabled: true
-                layer.effect: ShaderEffect {
-                    // Quick drop shadow isn't trivial without Qt5Compat.GraphicalEffects or Quickshell equivalent, 
-                    // but surface color usually has enough contrast if borders exist.
-                }
                 
                 RowLayout {
                     id: notifCol

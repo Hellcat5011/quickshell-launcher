@@ -27,7 +27,7 @@ PanelWindow {
 
     property var currentDate: new Date()
     Timer {
-        interval: 1000
+        interval: 30000
         running: true
         repeat: true
         onTriggered: root.currentDate = new Date()
