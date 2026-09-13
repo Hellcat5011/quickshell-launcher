@@ -68,13 +68,13 @@ OverlayWindow {
     }
     
     property Process clearProcess: Process {
-        command: ["sh", "-c", "echo '[]' > \"$HOME/.cache/quickshell-clipboard.json\" && rm -f /tmp/quickshell-clip-*.png"]
+        command: ["sh", "-c", "echo '[]' > \"$HOME/.cache/quickshell-clipboard/history.json\" && rm -f \"$HOME/.cache/quickshell-clipboard/images/\"*.png"]
     }
 
     // Process to read clipboard json
     property Process cliphistListProcess: Process {
         id: cliphistListProcess
-        command: ["cat", Quickshell.env("HOME") + "/.cache/quickshell-clipboard.json"]
+        command: ["cat", Quickshell.env("HOME") + "/.cache/quickshell-clipboard/history.json"]
         property string fullOutput: ""
         
         onRunningChanged: {

@@ -55,8 +55,12 @@ update() {
         fi
     fi
     
+    position=$(playerctl -p "$player" position 2>/dev/null)
+    length_us=$(playerctl -p "$player" metadata mpris:length 2>/dev/null)
+    
     jq -n -c --arg status "$status" --arg title "$title" --arg artist "$artist" --arg artUrl "$artUrl" --arg player "$player" \
-       '{status: $status, title: $title, artist: $artist, artUrl: $artUrl, player: $player}'
+       --argjson position "${position:-0}" --argjson lengthUs "${length_us:-0}" \
+       '{status: $status, title: $title, artist: $artist, artUrl: $artUrl, player: $player, position: $position, length: ($lengthUs / 1000000)}'
 }
 
 # Output initial state

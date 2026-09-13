@@ -25,11 +25,31 @@ PanelWindow {
     WlrLayershell.namespace: "desktop"
     
     implicitWidth: 400
-    implicitHeight: 140
+    implicitHeight: 170
     color: "transparent"
 
     property var mprisData: ({})
     property bool isPlaying: mprisData.status === "Playing"
+
+    // Track position for smooth progress bar interpolation
+    property real trackPosition: 0
+    property real trackLength: 0
+
+    onMprisDataChanged: {
+        trackPosition = root.mprisData.position || 0
+        trackLength = root.mprisData.length || 0
+    }
+
+    // Smooth local interpolation — advances position between 1-second script updates
+    Timer {
+        interval: 100
+        running: root.isPlaying && root.trackLength > 0
+        repeat: true
+        onTriggered: {
+            if (root.trackPosition < root.trackLength)
+                root.trackPosition += 0.1
+        }
+    }
 
     // Static process for playerctl commands to avoid Qt.createQmlObject memory leaks
     Process { id: playerCtlProcess }
@@ -181,6 +201,131 @@ PanelWindow {
             }
 
             Item { Layout.fillHeight: true } // Spacer
+
+            // ── Android-style squiggly progress bar ──────────────────
+            // Adapted from AOSP SquigglyProgress.kt — draws one
+            // continuous cubic-bezier wave across the full width, then
+            // clips it into played (opaque) and unplayed (muted) halves.
+            // The dot sits ON the wave so it traces the squiggle.
+            Canvas {
+                id: progressCanvas
+                Layout.fillWidth: true
+                height: 24
+
+                property real progress: root.trackLength > 0 ? Math.min(root.trackPosition / root.trackLength, 1.0) : 0
+                property real wavePhase: 0
+                // heightFraction: 1 when playing (full wave), 0 when paused (flat line)
+                property real heightFraction: root.isPlaying ? 1.0 : 0.0
+                Behavior on heightFraction {
+                    NumberAnimation { duration: root.isPlaying ? 800 : 550; easing.type: Easing.OutCubic }
+                }
+
+                NumberAnimation on wavePhase {
+                    from: 0
+                    to: 1.0
+                    duration: 800
+                    loops: Animation.Infinite
+                    running: root.isPlaying
+                }
+
+                onProgressChanged: requestPaint()
+                onWavePhaseChanged: requestPaint()
+                onHeightFractionChanged: requestPaint()
+
+                onPaint: {
+                    let ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+
+                    let centerY = height / 2
+                    let totalWidth = width
+                    let progressX = totalWidth * progress
+
+                    // Wave parameters
+                    let waveLength = 28
+                    let amplitude = 4.5
+                    let halfWave = waveLength / 2
+
+                    // Phase offset in pixels
+                    let phaseOffsetPx = wavePhase * waveLength
+
+                    ctx.lineCap = "round"
+                    ctx.lineJoin = "round"
+
+                    // Amplitude: full wave before progress, flat after
+                    function computeAmp(x, sign) {
+                        if (x >= progressX) return 0
+                        return sign * heightFraction * amplitude
+                    }
+
+                    // Build wave path with cubic bezier curves
+                    let waveStart = -phaseOffsetPx - halfWave
+                    let waveEnd = totalWidth + waveLength
+
+                    let wavePath = []
+                    let currentX = waveStart
+                    let waveSign = 1
+                    let currentAmp = computeAmp(currentX, waveSign)
+                    wavePath.push({x: currentX, y: centerY + currentAmp})
+
+                    while (currentX < waveEnd) {
+                        waveSign = -waveSign
+                        let nextX = currentX + halfWave
+                        let midX = currentX + halfWave / 2
+                        let nextAmp = computeAmp(nextX, waveSign)
+
+                        wavePath.push({
+                            type: "cubic",
+                            cp1x: midX, cp1y: centerY + currentAmp,
+                            cp2x: midX, cp2y: centerY + nextAmp,
+                            x: nextX,   y: centerY + nextAmp
+                        })
+                        currentAmp = nextAmp
+                        currentX = nextX
+                    }
+
+                    // Helper: draw the wave path
+                    function drawWave(ctx) {
+                        ctx.beginPath()
+                        ctx.moveTo(wavePath[0].x, wavePath[0].y)
+                        for (let i = 1; i < wavePath.length; i++) {
+                            let p = wavePath[i]
+                            ctx.bezierCurveTo(p.cp1x, p.cp1y, p.cp2x, p.cp2y, p.x, p.y)
+                        }
+                    }
+
+                    // --- Draw played portion (clip left of progressX) ---
+                    ctx.save()
+                    ctx.beginPath()
+                    ctx.rect(0, 0, progressX, height)
+                    ctx.clip()
+                    drawWave(ctx)
+                    ctx.strokeStyle = Theme.onPrimaryContainerColor
+                    ctx.lineWidth = 3
+                    ctx.stroke()
+                    ctx.restore()
+
+                    // --- Draw unplayed portion (flat line) ---
+                    if (progressX < totalWidth) {
+                        ctx.beginPath()
+                        ctx.moveTo(progressX, centerY)
+                        ctx.lineTo(totalWidth, centerY)
+                        ctx.strokeStyle = Qt.rgba(
+                            Theme.onPrimaryContainerColor.r,
+                            Theme.onPrimaryContainerColor.g,
+                            Theme.onPrimaryContainerColor.b, 0.2)
+                        ctx.lineWidth = 3
+                        ctx.stroke()
+                    }
+
+                    // --- Playback head dot (fixed at center) ---
+                    if (progress > 0 && progress < 1) {
+                        ctx.beginPath()
+                        ctx.arc(progressX, centerY, 5, 0, Math.PI * 2)
+                        ctx.fillStyle = Theme.onPrimaryContainerColor
+                        ctx.fill()
+                    }
+                }
+            }
 
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter

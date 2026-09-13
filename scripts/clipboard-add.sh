@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 TYPE=$1
-HISTORY_FILE="$HOME/.cache/quickshell-clipboard.json"
+CACHE_DIR="$HOME/.cache/quickshell-clipboard"
+IMAGE_DIR="$CACHE_DIR/images"
+HISTORY_FILE="$CACHE_DIR/history.json"
 MAX_ITEMS=50
 ID=$(date +%s%N)
+
+# Ensure directories exist
+mkdir -p "$IMAGE_DIR"
 
 # Initialize JSON if not exists
 if [ ! -s "$HISTORY_FILE" ]; then
@@ -29,7 +34,7 @@ if [ "$TYPE" = "text" ]; then
     JSON_ITEM=$(jq -n --arg id "$ID" --arg content "$CONTENT" '{id: $id, isImage: false, content: $content}')
     
 elif [ "$TYPE" = "image" ]; then
-    IMAGE_PATH="/tmp/quickshell-clip-$ID.png"
+    IMAGE_PATH="$IMAGE_DIR/clip-$ID.png"
     cat > "$IMAGE_PATH"
     
     # Check if the image is valid
