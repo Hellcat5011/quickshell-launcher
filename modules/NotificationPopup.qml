@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Widgets
+import Quickshell.Services.Notifications
 import "../services"
 
 PanelWindow {
@@ -51,7 +52,8 @@ PanelWindow {
                 "summary": notif.summary,
                 "body": notif.body,
                 "image": notif.image,
-                "icon": notif.icon
+                "icon": notif.icon,
+                "urgency": notif.urgency
             });
             
             // Removed forced deletion of index 0 when count > 5.
@@ -134,10 +136,11 @@ PanelWindow {
             width: 360
             height: notifCol.height + 24
             
+            // Auto-dismiss timer — skipped for critical/priority notifications
             Timer {
                 id: dismissTimer
                 interval: 5000
-                running: true
+                running: model.urgency !== NotificationUrgency.Critical
                 onTriggered: checkDismiss()
             }
             
@@ -169,8 +172,8 @@ PanelWindow {
             
             radius: 3
                 color: Qt.rgba(Theme.inversePrimary.r, Theme.inversePrimary.g, Theme.inversePrimary.b, 0.65)
-                border.width: 1
-                border.color: Theme.inversePrimary
+                border.width: model.urgency === NotificationUrgency.Critical ? 2 : 1
+                border.color: model.urgency === NotificationUrgency.Critical ? Theme.error : Theme.inversePrimary
                 
                 // Readability shadow
                 layer.enabled: true

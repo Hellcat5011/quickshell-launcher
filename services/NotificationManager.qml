@@ -3,6 +3,9 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
 
+// Urgency enum mirror for JS comparisons
+// NotificationUrgency.Low = 0, Normal = 1, Critical = 2
+
 QtObject {
     id: root
 
@@ -21,6 +24,7 @@ QtObject {
             let id = notif.id;
             let image = notif.image || "";
             let icon = notif.icon || "";
+            let urgency = notif.urgency;  // NotificationUrgency enum
             
             let nObj = {
                 id: id,
@@ -28,6 +32,7 @@ QtObject {
                 body: body,
                 image: image,
                 icon: icon,
+                urgency: urgency,
                 timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             };
 
@@ -54,6 +59,15 @@ QtObject {
                 });
             }
             
+            // Sort: groups containing at least one critical notification float to the top
+            groups.sort(function(a, b) {
+                let aCrit = a.notifications.some(function(n) { return n.urgency === NotificationUrgency.Critical; });
+                let bCrit = b.notifications.some(function(n) { return n.urgency === NotificationUrgency.Critical; });
+                if (aCrit && !bCrit) return -1;
+                if (!aCrit && bCrit) return 1;
+                return 0;
+            });
+            
             root.groupedNotifications = groups;
             
             // Trigger popup
@@ -64,7 +78,8 @@ QtObject {
                 summary: summary,
                 body: body,
                 image: image,
-                icon: icon
+                icon: icon,
+                urgency: urgency
             });
         }
     }

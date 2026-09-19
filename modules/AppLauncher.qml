@@ -25,6 +25,15 @@ OverlayWindow {
 
     property string currentWallpaperPath: "file:///home/vic/.wa.jpg"
 
+    // When false, mouse input is ignored (cursor hidden, hover-selection disabled).
+    // Becomes true on first real mouse movement or click after the launcher opens.
+    property bool mouseActivated: false
+
+    // Ignores the initial burst of pointer events that Wayland delivers
+    // when a surface appears under the cursor.  While running, all
+    // onPositionChanged handlers are suppressed.
+    Timer { id: mouseReadyTimer; interval: 150 }
+
     // Re-focus search and refresh the app list every time the panel opens.
     onShownChanged: {
         if (shown) {
@@ -36,6 +45,9 @@ OverlayWindow {
             launcher.selectedIndex = 0
             list.positionViewAtBeginning()
             queryField.forceActiveFocus()
+            // Suppress mouse input until the user actually moves or clicks
+            launcher.mouseActivated = false
+            mouseReadyTimer.restart()
         }
     }
 
@@ -145,6 +157,25 @@ OverlayWindow {
         launcher.hide()
     }
 
+    // ── Cursor-blanking overlay ─────────────────────────────────────────
+    // Loader recreates a BlankCursor MouseArea each open so Qt re-delivers
+    // pointer-enter (needed when the Wayland surface stayed mapped during
+    // the close animation).  Destroyed once mouseActivated flips.
+    Loader {
+        anchors.fill: parent
+        z: 100
+        active: !launcher.mouseActivated
+        sourceComponent: MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.NoButton
+            hoverEnabled: true
+            cursorShape: Qt.BlankCursor
+            onPositionChanged: {
+                if (!mouseReadyTimer.running) launcher.mouseActivated = true
+            }
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -250,7 +281,7 @@ OverlayWindow {
                         anchors.fill:    parent
                         anchors.margins: 2
                         radius:          Theme.radiusSmall
-                        color: (index === launcher.selectedIndex || hoverArea.containsMouse)
+                        color: (index === launcher.selectedIndex || (launcher.mouseActivated && hoverArea.containsMouse))
                                ? Qt.rgba(Theme.onPrimaryContainerColor.r, Theme.onPrimaryContainerColor.g, Theme.onPrimaryContainerColor.b, 0.85)
                                : "transparent"
 
@@ -270,7 +301,7 @@ OverlayWindow {
                             Text {
                                 Layout.fillWidth:    true
                                 text:                modelData.name
-                                color: (index === launcher.selectedIndex || hoverArea.containsMouse) ? Theme.inversePrimary : Theme.onPrimaryContainerColor
+                                color: (index === launcher.selectedIndex || (launcher.mouseActivated && hoverArea.containsMouse)) ? Theme.inversePrimary : Theme.onPrimaryContainerColor
                                 font.pixelSize:      15
                                 elide:               Text.ElideRight
                                 Layout.alignment:    Qt.AlignVCenter
@@ -279,7 +310,7 @@ OverlayWindow {
                             Text {
                                 visible:          modelData.genericName && modelData.genericName.length > 0
                                 text:             modelData.genericName ?? ""
-                                color: (index === launcher.selectedIndex || hoverArea.containsMouse) ? Qt.rgba(Theme.inversePrimary.r, Theme.inversePrimary.g, Theme.inversePrimary.b, 0.7) : Theme.surfaceVariantText
+                                color: (index === launcher.selectedIndex || (launcher.mouseActivated && hoverArea.containsMouse)) ? Qt.rgba(Theme.inversePrimary.r, Theme.inversePrimary.g, Theme.inversePrimary.b, 0.7) : Theme.surfaceVariantText
                                 font.pixelSize:   12
                                 elide:            Text.ElideRight
                                 Layout.alignment: Qt.AlignVCenter
@@ -291,10 +322,16 @@ OverlayWindow {
                         id:           hoverArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        // Only steal selection if the mouse actually moves, otherwise
-                        // the selection will jump to the cursor instantly when the window opens.
-                        onPositionChanged: launcher.selectedIndex = index
-                        onClicked:    launcher.launch(modelData)
+                        onPositionChanged: {
+                            if (!mouseReadyTimer.running && !launcher.mouseActivated)
+                                launcher.mouseActivated = true
+                            if (launcher.mouseActivated)
+                                launcher.selectedIndex = index
+                        }
+                        onClicked: {
+                            launcher.mouseActivated = true
+                            launcher.launch(modelData)
+                        }
                     }
                 }
             }

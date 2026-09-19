@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
+import Quickshell.Services.Notifications
 import "../services"
 
 OverlayWindow {
@@ -511,8 +512,8 @@ OverlayWindow {
                                             height: notifCol.height + 24
                                             radius: 3
                                             color: Qt.rgba(Theme.inversePrimary.r, Theme.inversePrimary.g, Theme.inversePrimary.b, 0.85)
-                                            border.width: 1
-                                            border.color: Theme.onPrimaryContainerColor
+                                            border.width: modelData.urgency === NotificationUrgency.Critical ? 2 : 1
+                                            border.color: modelData.urgency === NotificationUrgency.Critical ? Theme.error : Theme.onPrimaryContainerColor
                                             layer.enabled: true
                                             
                                             ColumnLayout {
