@@ -60,6 +60,14 @@ ShellRoot {
         id: powerMenu
     }
 
+    Modules.ScreenCapture {
+        id: screenCapture
+    }
+
+    Modules.ScreenshotSettings {
+        id: screenshotSettings
+    }
+
     Modules.DesktopMpris {
         id: desktopMpris
     }
@@ -127,5 +135,16 @@ ShellRoot {
         function toggle(): void { powerMenu.toggle() }
         function open(): void { powerMenu.show() }
         function close(): void { powerMenu.hide() }
+    }
+
+    IpcHandler {
+        target: "screenshot"
+        function toggle(): void { screenCapture.toggle() }
+        function open(): void { screenCapture.show() }
+        function close(): void { screenCapture.hide() }
+        function region(): void { screenCapture.captureRegion() }
+        function window(): void { screenCapture.captureWindow() }
+        function output(): void { screenCapture.captureOutput() }
+        function settings(): void { screenshotSettings.toggle() }
     }
 }
