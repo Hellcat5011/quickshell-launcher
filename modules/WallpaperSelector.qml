@@ -18,11 +18,13 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick.Effects
 import "../services"
 
 OverlayWindow {
     id: picker
+    WlrLayershell.namespace: "wallpaper"
     panelWidth:      1118
     panelHeight:     468
     cardRadius:      Theme.radiusLarge
