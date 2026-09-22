@@ -147,4 +147,61 @@ ShellRoot {
         function output(): void { screenCapture.captureOutput() }
         function settings(): void { screenshotSettings.toggle() }
     }
+
+    IpcHandler {
+        target: "help"
+        function display(): string {
+            return `
+Quickshell Launcher IPC Commands:
+
+Usage: qs -c quickshell-launcher ipc call <target> <method> [args...]
+
+Available Targets and Methods:
+
+  launcher
+    toggle()  - Toggle the application launcher
+    open()    - Open the application launcher
+    close()   - Close the application launcher
+
+  wallpaper
+    toggle()  - Toggle the wallpaper selector
+    open()    - Open the wallpaper selector
+    close()   - Close the wallpaper selector
+
+  theme
+    reload()  - Force reload the current theme
+
+  notif
+    toggle()  - Toggle the notification center
+    open()    - Open the notification center
+    close()   - Close the notification center
+
+  osd
+    volume(val: string)      - Show volume OSD
+    brightness(val: string)  - Show brightness OSD
+
+  clipboard
+    toggle()  - Toggle the clipboard manager
+    open()    - Open the clipboard manager
+    close()   - Close the clipboard manager
+
+  power
+    toggle()  - Toggle the power menu
+    open()    - Open the power menu
+    close()   - Close the power menu
+
+  screenshot
+    toggle()    - Toggle the screen capture overlay
+    open()      - Open the screen capture overlay
+    close()     - Close the screen capture overlay
+    region()    - Capture a screen region
+    window()    - Capture a specific window
+    output()    - Capture a specific output/screen
+    settings()  - Toggle screenshot settings
+
+  help
+    display()    - Show this help message
+`
+        }
+    }
 }
