@@ -21,3 +21,10 @@ IPC calls:
 - qs -c quickshell-launcher ipc call clipboard toggle
 - qs -c quickshell-launcher ipc call power toggle
 - qs -c quickshell-launcher ipc call notif toggle
+- qs -c quickshell-launcher ipc call screenshot toggle
+- qs -c quickshell-launcher ipc call screenshot settings toggle
+
+
+For more information about the available IPC calls and different options, run the below command in a terminal:
+
+- qs -c quickshell-launcher ipc call help display
