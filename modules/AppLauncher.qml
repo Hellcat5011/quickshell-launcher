@@ -186,6 +186,7 @@ OverlayWindow {
             Layout.preferredWidth: 576
             Layout.fillHeight: true
             source: launcher.currentWallpaperPath
+            sourceSize.width: 1080
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
         }

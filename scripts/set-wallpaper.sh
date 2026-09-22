@@ -19,7 +19,14 @@ fi
 # exec-once = swww-daemon in hyprland.conf).
 awww img "$WALLPAPER" --transition-type random --transition-duration 1 --transition-fps 60
 
-cp "$WALLPAPER" $HOME/.wa.jpg
+# Create a downscaled JPEG preview for the app launcher.
+# The launcher only shows this at ~576 px wide, so 1080 px is more than enough.
+# This avoids decoding a huge upscaled PNG every time the launcher opens.
+if command -v magick >/dev/null 2>&1; then
+  magick "$WALLPAPER" -resize 1080x -quality 90 "$HOME/.wa.jpg"
+else
+  cp "$WALLPAPER" "$HOME/.wa.jpg"
+fi
 
 if command -v matugen >/dev/null 2>&1; then
   # Regenerates every template configured in ~/.config/matugen/config.toml,

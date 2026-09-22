@@ -231,6 +231,7 @@ OverlayWindow {
                     id: img
                     anchors.fill:  parent
                     source:        "file://" + modelData
+                    sourceSize.width: 1920
                     fillMode:      Image.PreserveAspectCrop
                     asynchronous:  true
                     visible:       false
