@@ -81,7 +81,6 @@ PanelWindow {
     property int    frameCount:    0
     property string framesDir:     ""
     property bool   captureInProgress: false
-    property point  cursorPos: Qt.point(0, 0)
 
     // ---- Computed selection rect (Rounded to prevent subpixel smearing!) ---
     readonly property int selX: Math.round(Math.min(selStartX, selEndX))
@@ -494,30 +493,7 @@ PanelWindow {
         }
     }
 
-    Process {
-        id: cursorPosProcess
-        command: ["hyprctl", "-j", "cursorpos"]
-        property string output: ""
-        onRunningChanged: if (running) output = ""
-        stdout: SplitParser {
-            onRead: data => { cursorPosProcess.output += data }
-        }
-        onExited: (exitCode) => {
-            if (exitCode !== 0) return
-            try {
-                var p = JSON.parse(cursorPosProcess.output)
-                root.cursorPos = Qt.point(p.x, p.y)
-            } catch (e) { /* ignore */ }
-        }
-    }
 
-    Timer {
-        id: cursorPosTimer
-        interval: 1000 / root.recordingFps
-        repeat: true
-        running: root.isRecording
-        onTriggered: cursorPosProcess.running = true
-    }
 
     // ---- Recording live view (for screen recording) -----------------------
     Item {
@@ -1108,32 +1084,5 @@ PanelWindow {
             }
         }
     }
-
-    // ---- Folder picker process --------------------------------------------
-    Process {
-        id: folderPickerProcess
-        property string selectedPath: ""
-
-        onRunningChanged: {
-            if (running) selectedPath = ""
-        }
-
-        onExited: (exitCode) => {
-            if (exitCode === 0 && selectedPath.trim().length > 0) {
-                var newPath = selectedPath.trim()
-                if (root.captureMode === "screenshot") {
-                    root.screenshotDir = newPath
-                    root.saveConfig("screenshotDir", newPath)
-                } else {
-                    root.recordingDir = newPath
-                    root.saveConfig("recordingDir", newPath)
-                }
-                pathField.text = newPath
-            }
-        }
-
-        stdout: SplitParser {
-            onRead: data => { folderPickerProcess.selectedPath += data }
-        }
-    }
+    // ---- (Folder picker logic moved to ScreenshotSettings.qml) ------------
 }
