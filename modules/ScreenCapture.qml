@@ -83,11 +83,11 @@ PanelWindow {
     property bool   captureInProgress: false
     property point  cursorPos: Qt.point(0, 0)
 
-    // ---- Computed selection rect ------------------------------------------
-    readonly property real selX: Math.min(selStartX, selEndX)
-    readonly property real selY: Math.min(selStartY, selEndY)
-    readonly property real selW: Math.abs(selEndX - selStartX)
-    readonly property real selH: Math.abs(selEndY - selStartY)
+    // ---- Computed selection rect (Rounded to prevent subpixel smearing!) ---
+    readonly property int selX: Math.round(Math.min(selStartX, selEndX))
+    readonly property int selY: Math.round(Math.min(selStartY, selEndY))
+    readonly property int selW: Math.round(Math.abs(selEndX - selStartX))
+    readonly property int selH: Math.round(Math.abs(selEndY - selStartY))
 
     // ---- Wayland layer-shell plumbing -------------------------------------
     WlrLayershell.layer: WlrLayer.Overlay
@@ -229,6 +229,11 @@ PanelWindow {
 
     Process {
         id: notifyProcess
+    }
+
+    Process {
+        id: settingsLauncher
+        command: ["qs", "-c", "quickshell-launcher", "ipc", "call", "screenshot", "settings"]
     }
 
     // ---- ScreencopyView (frozen backdrop) ---------------------------------
@@ -419,7 +424,7 @@ PanelWindow {
             if (event.key === Qt.Key_Escape) {
                 root.hide()
                 event.accepted = true
-            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
                 if (root.hasSelection || root.selectionType === "output") {
                     performCapture()
                 }
@@ -455,7 +460,6 @@ PanelWindow {
         width: Math.max(1, root.selW)
         height: Math.max(1, root.selH)
         clip: true
-        layer.enabled: true
         opacity: root.shown ? 1 : 0.001 // Hide from screen during recording
 
         ScreencopyView {
@@ -479,7 +483,6 @@ PanelWindow {
         width: root.width
         height: root.height
         clip: true
-        layer.enabled: true
         opacity: root.shown ? 1 : 0.001 // Hide from screen during recording
 
         ScreencopyView {
@@ -1084,7 +1087,7 @@ PanelWindow {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             root.hide()
-                            Quickshell.Io.Ipc.call("screenshot", "settings")
+                            settingsLauncher.running = true
                         }
                     }
                 }

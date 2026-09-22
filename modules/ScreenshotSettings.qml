@@ -19,6 +19,14 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "screenshot-settings"
+    
+    // When a file picker is open, only the dialog accepts input (rest passes through to file picker)
+    WlrLayershell.mask: (ssPickerProcess.running || recPickerProcess.running) ? dialogRegion : null
+    Region {
+        id: dialogRegion
+        item: dialogRect
+    }
+
     color: "transparent"
     focusable: root.shown
     anchors { top: true; bottom: true; left: true; right: true }
@@ -85,6 +93,7 @@ PanelWindow {
 
     // Settings Dialog
     Rectangle {
+        id: dialogRect
         anchors.centerIn: parent
         width: 400
         height: mainCol.height + 40
