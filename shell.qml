@@ -88,6 +88,10 @@ ShellRoot {
         id: keybindViewer
     }
 
+    Modules.Lockscreen {
+        id: lockscreen
+    }
+
     // IPC handlers: these let you (or a Hyprland keybind) control the
     // windows above from a terminal, e.g.:
     //   qs -c quickshell-launcher ipc call launcher toggle
@@ -160,6 +164,12 @@ ShellRoot {
     }
 
     IpcHandler {
+        target: "lock"
+        function lock(): void { lockscreen.lock() }
+        function unlock(): void { lockscreen.unlock() }
+    }
+
+    IpcHandler {
         target: "help"
         function display(): string {
             return `
@@ -214,6 +224,10 @@ Available Targets and Methods:
     toggle()  - Toggle the keybind viewer
     open()    - Open the keybind viewer
     close()   - Close the keybind viewer
+
+  lock
+    lock()    - Lock the session
+    unlock()  - Force unlock (testing/recovery only)
 
   help
     display()    - Show this help message
