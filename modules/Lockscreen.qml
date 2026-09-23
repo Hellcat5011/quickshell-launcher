@@ -25,6 +25,7 @@ Scope {
     readonly property string username: Quickshell.env("USER") || ""
     readonly property string home: Quickshell.env("HOME") || ""
     property string currentText: ""
+    property string statusMessage: ""
     property bool unlockInProgress: false
     property bool showFailure: false
     signal failed()
@@ -97,6 +98,7 @@ Scope {
     function tryUnlock() {
         if (currentText === "" || unlockInProgress) return
         showFailure = false
+        statusMessage = ""
         unlockInProgress = true
         pam.start()
     }
@@ -115,7 +117,10 @@ Scope {
     PamContext {
         id: pam
         config: "quickshell"
-        onPamMessage: { if (responseRequired) respond(root.currentText) }
+        onPamMessage: { 
+            if (responseRequired) respond(root.currentText)
+            else root.statusMessage = pam.message 
+        }
         onCompleted: result => {
             root.unlockInProgress = false
             root.currentText = ""
@@ -136,7 +141,7 @@ Scope {
 
     WlSessionLock {
         id: sessionLock
-        onLockStateChanged: { if (locked) { root.currentText = ""; root.showFailure = false; root.unlocking = false; root.fade = 0; fadeIn.restart() } }
+        onLockStateChanged: { if (locked) { root.currentText = ""; root.statusMessage = ""; root.showFailure = false; root.unlocking = false; root.fade = 0; fadeIn.restart() } }
 
         WlSessionLockSurface {
             id: lockSurface
@@ -476,7 +481,7 @@ Scope {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.bottom
                         anchors.topMargin: content.px(15)
-                        text: pam.message || ""
+                        text: root.statusMessage
                         color: pam.messageIsError ? Theme.error : Qt.rgba(Theme.onPrimaryContainerColor.r, Theme.onPrimaryContainerColor.g, Theme.onPrimaryContainerColor.b, 0.7)
                         font.pixelSize: content.px(16)
                         font.family: "Musashi Brush"
