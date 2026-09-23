@@ -84,6 +84,10 @@ ShellRoot {
         id: desktopCalendar
     }
 
+    Modules.KeybindViewer {
+        id: keybindViewer
+    }
+
     // IPC handlers: these let you (or a Hyprland keybind) control the
     // windows above from a terminal, e.g.:
     //   qs -c quickshell-launcher ipc call launcher toggle
@@ -149,6 +153,13 @@ ShellRoot {
     }
 
     IpcHandler {
+        target: "keybinds"
+        function toggle(): void { keybindViewer.toggle() }
+        function open(): void { keybindViewer.show() }
+        function close(): void { keybindViewer.hide() }
+    }
+
+    IpcHandler {
         target: "help"
         function display(): string {
             return `
@@ -198,6 +209,11 @@ Available Targets and Methods:
     window()    - Capture a specific window
     output()    - Capture a specific output/screen
     settings()  - Toggle screenshot settings
+
+  keybinds
+    toggle()  - Toggle the keybind viewer
+    open()    - Open the keybind viewer
+    close()   - Close the keybind viewer
 
   help
     display()    - Show this help message
