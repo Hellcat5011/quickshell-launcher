@@ -165,6 +165,14 @@ OverlayWindow {
     }
 
     function _humanise(raw) {
+        // hl.dsp.exec_cmd(qs_launch .. "notif toggle") → friendly name
+        // Handles variable concatenation patterns like: qs_launch .. "command arg"
+        let qsMatch = raw.match(/hl\.dsp\.exec_cmd\(\s*qs_launch\s*\.\.\s*"([^"]+)"\s*\)/)
+        if (qsMatch) {
+            let qsCmd = qsMatch[1].trim()
+            return _qsLaunchName(qsCmd)
+        }
+
         // hl.dsp.exec_cmd("some command") → "some command"
         let execMatch = raw.match(/hl\.dsp\.exec_cmd\(\s*"([^"]+)"\s*\)/)
         if (execMatch) {
@@ -225,6 +233,25 @@ OverlayWindow {
 
         // Fallback: strip hl.dsp. prefix
         return raw.replace(/hl\.dsp\./, "").replace(/[(){}]/g, " ").trim()
+    }
+
+    // Map qs_launch IPC commands to friendly display names
+    function _qsLaunchName(cmd) {
+        let map = {
+            "notif toggle":       "Notification Center",
+            "wallpaper toggle":   "Wallpaper Picker",
+            "launcher toggle":    "App Launcher",
+            "power toggle":       "Power Menu",
+            "clipboard toggle":   "Clipboard History",
+            "screenshot region":  "Screenshot Region",
+            "screenshot window":  "Screenshot Window",
+            "screenshot output":  "Screenshot Output",
+            "keybinds toggle":    "Keybind Viewer",
+        }
+        if (map[cmd]) return map[cmd]
+
+        // Fallback: capitalize the command
+        return cmd.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
     }
 
     // ── Visual ───────────────────────────────────────────────────────────
