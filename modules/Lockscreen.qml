@@ -250,7 +250,7 @@ Scope {
                         anchors.verticalCenter: colonItem.verticalCenter
                         text: {
                             let h = root.currentDate.getHours() % 12 || 12
-                            return h.toString()
+                            return h.toString().padStart(2, '0')
                         }
                         color: Theme.primary
                         font.family: "Fast Hand"
