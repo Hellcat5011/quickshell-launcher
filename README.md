@@ -51,7 +51,7 @@ Make sure you have the following packages installed on your system before runnin
    ```bash
    qs -c quickshell-launcher
    ```
-   *(It is recommended to add this command to your compositor's autostart configuration, e.g., `exec-once = qs -c quickshell-launcher` in `hyprland.conf`)*
+   *(It is recommended to add this command to your compositor's autostart configuration, e.g., `hl.exec_cmd("qs -c quickshell-launcher")' in 'hyprland.conf')*
 
 ## IPC Commands (Keybind Integration)
 
