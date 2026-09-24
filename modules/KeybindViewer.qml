@@ -25,7 +25,7 @@ OverlayWindow {
 
     Process {
         id: reader
-        command: ["cat", "/home/vic/.config/hypr/user/keybinds.lua"]
+        command: ["sh", "-c", "cat ~/.config/hypr/user/keybinds.lua"]
         property string buf: ""
         onRunningChanged: {
             if (running) buf = ""

@@ -31,7 +31,7 @@ OverlayWindow {
     // No card background — the images float directly over the wallpaper.
     cardTransparent: true
 
-    property string wallpaperDir: "/mnt/hdd/Wallpapers/walls"
+    property string wallpaperDir: Quickshell.env("HOME") + "/Pictures/Wallpapers"
     property var    wallpapers:   []
     property bool   applying:     false
     property int    currentIndex: 0
